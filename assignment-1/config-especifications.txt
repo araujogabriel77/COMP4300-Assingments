@@ -1,0 +1,24 @@
+WINDOW
+  - width                   int
+  - heigth                  int
+
+FONT
+  - font file               std::string
+  - size                    int
+  - R                       int
+  - G                       int
+  - B                       int
+
+RECTANGLE
+  - shape name              std::string
+  - initial pos(x,y)        float, float
+  - initial speed(sx,sy)    float, float
+  - RGB color(r,g,b)        int, int ,int
+  - size(w, h)              float, float
+
+CIRCLE
+  - shape name              std::string
+  - initial pos(x,y)        float, float
+  - initial speed(sx,sy)    float, float
+  - RGB color(r,g,b)        int, int ,int
+  - radius                  float
