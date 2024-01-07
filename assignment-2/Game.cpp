@@ -14,40 +14,85 @@ void Game::init(const std::string& path)
 	// TODO: read in config file here
 	// use the premade PlayerConfig, EnemyConfig, BulletConfig variables
 	std::ifstream fin(path);
+  std::string configType;
+  int window_width, window_height, frameLimit, isFullScreen;
 
-	//set up default window parameters
-	m_window.create(sf::VideoMode(1280, 720), "Assignment 2");
-  std::cout << "Window created\n";
-	m_window.setFramerateLimit(60);
+  while (fin >> configType)
+  {
+    if (configType == "Window")
+    {
+      fin >> window_width >> window_height >> frameLimit >> isFullScreen;
+    }
 
-	spawnPlayer();
+    if (configType == "Font")
+    {
+      std::string type, fontFile;
+      int size, r, g, b;
+      fin >> fontFile >> size >> r >> g >> b;
+
+      if (!m_font.loadFromFile(fontFile))
+      {
+        std::cerr << "Could not load font\n";
+        exit(-1);
+      }
+      m_text.setCharacterSize(size);
+      std::cout << "Font loaded!\n";
+    }
+
+    if (configType == "Player")
+    {
+      // struct PlayerConfig { int SR, CR, FR, FG, FB, OR, OG, OB, OT, V; float S; };
+      fin >> m_playerConfig.SR >> m_playerConfig.CR >> m_playerConfig.S >> m_playerConfig.FR >> m_playerConfig.FG >> m_playerConfig.FB >> m_playerConfig.OR >> m_playerConfig.OG >> m_playerConfig.OB >> m_playerConfig.OT >> m_playerConfig.V;
+    }
+    if (configType == "Enemy")
+    {
+      // struct EnemyConfig { int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SI; float SMIN, SMAX; };
+      fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX >> m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SI;
+    }
+    if (configType == "Bullet")
+    {
+      // struct BulletConfig { int SR, CR, FR, FG, FB, OR, OG, OB, OT, V, L; float S; };
+      fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >> m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB >> m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB >> m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+    }
+  }
+
+  // set up default window parameters
+  m_window.create(sf::VideoMode(window_width, window_height), "Assignment 2");
+  m_window.setFramerateLimit(frameLimit);
+  m_window.setVerticalSyncEnabled(true);
+
+  spawnPlayer();
 }
 
 void Game::run()
 {
-	//TODO: add pause functionality in herer
-	// some systems should function while paused (rendering)
-	// some systems shouldn't (movement / input)
+  // TODO: add pause functionality in here
+  //  some systems should function while paused (rendering)
+  //  some systems shouldn't (movement / input)
 
-	while (m_running)
-	{
-		m_entities.update();
+  while (m_running)
+  {
+    m_entities.update();
 
-		sEnemySpawner();
-		sMovement();
-		sCollision();
-		sUserInput();
-		sRender();
+    sUserInput();
+    sCollision();
+    sRender();
 
-		// increment the current frame
-		// may need to be moved when pause implemented
-		m_currentFrame++;
-	}
+    if (!m_paused)
+    {
+      sMovement();
+      sEnemySpawner();
+      m_currentFrame++;
+    }
+
+    // increment the current frame
+    // may need to be moved when pause implemented
+  }
 }
 
-void Game::setPaused(bool paused)
+void Game::setPaused()
 {
-	//TODO
+  m_paused = !m_paused;
 }
 
 // respawin the player in the middle of the screen
@@ -63,14 +108,14 @@ void Game::spawnPlayer()
 	entity->cTransform = std::make_shared<CTransform>(Vec2(200.0f, 200.0f), Vec2(1.0f, 1.0f), 0.0f);
 
 	// The entity's shape will have radius 32, 8 sides, dark grey fill, and red outline of thickness 4
-	entity->cShape = std::make_shared<CShape>(320.f, 8, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 4.0f);
+  entity->cShape = std::make_shared<CShape>(m_playerConfig.SR, m_playerConfig.V, sf::Color(m_playerConfig.FR, m_playerConfig.FG, m_playerConfig.FB), sf::Color(m_playerConfig.OR, m_playerConfig.OG, m_playerConfig.OB), m_playerConfig.OT);
 
-	// Add an input component to the plaer so that we can use inputs
-	entity->cInput = std::make_shared<CInput>();
+  // Add an input component to the plaer so that we can use inputs
+  entity->cInput = std::make_shared<CInput>();
 
-	// Since we want this Entity to be our player, set our Game's player variable to be this Entioty
-	// This goes slightly against the EntityManager paradim, but we use the player so much it's worth it
-	m_player = entity;
+  // Since we want this Entity to be our player, set our Game's player variable to be this Entioty
+  // This goes slightly against the EntityManager paradim, but we use the player so much it's worth it
+  m_player = entity;
 }
 
 // spawn an enemy at a random position
@@ -79,19 +124,17 @@ void Game::spawnEnemy()
 	// TODO: make sure the enemy is spawned properly with te m_enemyConfig variables
 	//		 the enemy must be spawned completely within the bounds of the window
 
+  // exemplo
+  auto entity = m_entities.addEntity("Enemy");
 
-	// exemplo
-	auto entity = m_entities.addEntity("Enemy");
+  float ex = rand() % m_window.getSize().x;
+  float ey = rand() % m_window.getSize().y;
 
-	float ex = rand() % m_window.getSize().x;
-	float ey = rand() % m_window.getSize().y;
+  entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), Vec2(0.0f, 0.0f), 0.0f);
+  entity->cShape = std::make_shared<CShape>(16.f, 3, sf::Color(0, 0, 255), sf::Color(255, 255, 255), 4.0f);
 
-	entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), Vec2(0.0f, 0.0f), 0.0f);
-	entity->cShape = std::make_shared<CShape>(16.f, 3, sf::Color(0, 0, 255), sf::Color(255, 255, 255), 4.0f);
-
-
-	// record when most recent enemy was spawned
-	m_lastEnemySpawnTime = m_currentFrame;
+  // record when most recent enemy was spawned
+  m_lastEnemySpawnTime = m_currentFrame;
 }
 
 // spawns  te small enemies when a big one (input entity e) explodes
@@ -130,21 +173,34 @@ void Game::sMovement()
 	{
 		m_player->cTransform->velocity.y = -5;
 	}
-	m_player->cTransform->pos.x = m_player->cTransform->velocity.x;
-	m_player->cTransform->pos.y = m_player->cTransform->velocity.y;
+  if (m_player->cInput->down)
+  {
+    m_player->cTransform->velocity.y = 5;
+  }
+  if (m_player->cInput->left)
+  {
+    m_player->cTransform->velocity.x = -5;
+  }
+  if (m_player->cInput->right)
+  {
+    m_player->cTransform->velocity.x = 5;
+  }
+
+  m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
+  m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
 }
 
 void Game::sLifespan()
 {
-	// TODO: implement all lifespan functionality
-	//
-	// for all entityes
-	//		if entity has no lifespan component, skip it
-	//		if entity has > 0 remaining lifespan, subtract 1
-	//		if it has lifespan and is alive
-	//			scale its alpa channel properly
-	//		if it has lifespan and its time is up
-	//			destroy the entity
+  // TODO: implement all lifespan functionality
+  //
+  // for all entityes
+  //		if entity has no lifespan component, skip it
+  //		if entity has > 0 remaining lifespan, subtract 1
+  //		if it has lifespan and is alive
+  //			scale its alpha channel properly
+  //		if it has lifespan and its time is up
+  //			destroy the entity
 }
 
 void Game::sCollision()
@@ -155,10 +211,9 @@ void Game::sCollision()
 	for (auto b : m_entities.getEntities("bullet"))
 	{
 		for (auto e : m_entities.getEntities("enemy"))
-		{
-
-		}
-	}
+    {
+    }
+  }
 }
 
 void Game::sEnemySpawner()
@@ -167,7 +222,10 @@ void Game::sEnemySpawner()
 	//
 	//		(use m_currentFrame - m_lastEnemtSpawnTime) to determine
 	//		how long it has been since the last enemy spawned
-	spawnEnemy();
+  if (m_currentFrame - m_lastEnemySpawnTime > 90)
+  {
+    spawnEnemy();
+  }
 }
 
 void Game::sRender()
@@ -223,35 +281,67 @@ void Game::sUserInput()
 			case sf::Keyboard::W:
 				m_player->cInput->up = true;
 				std::cout << "W key Pressed\n";
-				//TODO: set player's input component "up to true
-				break;
-			default:
-				break;
-			}
-		}
+        break;
+      case sf::Keyboard::S:
+        m_player->cInput->down = true;
+        std::cout << "S key Pressed\n";
+        break;
+      case sf::Keyboard::D:
+        m_player->cInput->right = true;
+        std::cout << "D key Pressed\n";
+        break;
+      case sf::Keyboard::A:
+        m_player->cInput->left = true;
+        std::cout << "A key Pressed\n";
+        break;
+      case sf::Keyboard::P:
+        setPaused();
+        std::cout << "P key Pressed\n";
+        break;
+      default:
+        break;
+      }
+    }
 
-		// this event is triggered when a key is released
-		if (event.type == sf::Event::KeyReleased)
-		{
-			switch (event.key.code)
-			{
-			case sf::Keyboard::W:
-				m_player->cInput->up = false;
-				std::cout << "W key Released\n";
-				//TODO: set player's input component "up to false
-				break;
-			default:
-				break;
-			}
-		}
+    // this event is triggered when a key is released
+    if (event.type == sf::Event::KeyReleased)
+    {
+      switch (event.key.code)
+      {
+      case sf::Keyboard::W:
+        m_player->cInput->up = false;
+        std::cout << "W key Released\n";
+        break;
+      case sf::Keyboard::S:
+        m_player->cInput->down = false;
+        std::cout << "S key Released\n";
+        break;
+      case sf::Keyboard::D:
+        m_player->cInput->right = false;
+        std::cout << "D key Released\n";
+        break;
+      case sf::Keyboard::A:
+        m_player->cInput->left = false;
+        std::cout << "A key Released\n";
+        break;
+      default:
+        break;
+      }
+    }
 
-		if (event.type == sf::Event::MouseButtonPressed)
-		{
-			if (event.mouseButton.button == sf::Mouse::Left)
-			{
-				std::cout << "Left mouse button clicked at (" << event.mouseButton.x << "," << event.mouseButton.y << ")\n";
-				// call spawnSpecialWeapon here
-			}
-		}
-	}
+    if (event.type == sf::Event::MouseButtonPressed)
+    {
+      if (event.mouseButton.button == sf::Mouse::Left)
+      {
+        std::cout << "Left mouse button clicked at (" << event.mouseButton.x << "," << event.mouseButton.y << ")\n";
+        float deltaX, deltaY;
+        deltaX = event.mouseButton.x - m_player->cTransform->pos.x;
+        deltaY = event.mouseButton.y - m_player->cTransform->pos.y;
+
+        float dist = sqrt((deltaX * deltaX) + (deltaY * deltaY));
+
+        std::cout << "Distância entre mouse e player: " << dist << "\n";
+      }
+    }
+  }
 }

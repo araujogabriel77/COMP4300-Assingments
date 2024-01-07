@@ -30,15 +30,12 @@ void EntityManager::update()
 
 void EntityManager::removeDeadEntities(EntityVec& vec)
 {
-	// TODO: remove all dead entities from te input vector
-	//		tis is called by the update function
-	for (auto e : vec)
+  for (auto e : vec)
 	{
 		if (!e->isActive()) {
 			e->destroy();
 		}
 	}
-
 }
 
 std::shared_ptr<Entity> EntityManager::addEntity(const std::string& tag)

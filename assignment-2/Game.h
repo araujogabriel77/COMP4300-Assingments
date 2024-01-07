@@ -27,10 +27,10 @@ class Game
 	std::shared_ptr<Entity> m_player;
 
 	void init(const std::string& config); // initialize the GameState with a config file path
-	void setPaused(bool paused); // pause the game
+  void setPaused();                     // pause the game
 
-	void sMovement(); // System: Entity position / moviment update
-	void sUserInput(); // System: User Input
+  void sMovement();  // System: Entity position / moviment update
+  void sUserInput(); // System: User Input
 	void sLifespan(); // System: Lifespan
 	void sRender(); // System: Render / Drawing
 	void sEnemySpawner(); // System: Spawns Enemies
