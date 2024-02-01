@@ -64,3 +64,16 @@ float Vec2::dist(const Vec2& rhs) const
 {
     return sqrtf((rhs.x - x) * (rhs.x - x) + (rhs.y - y) * (rhs.y - y));
 }
+
+void Vec2::normalize()
+{
+  double L{std::sqrt(x * x + y * y)};
+  x = x / L;
+  y = y / L;
+}
+
+Vec2 Vec2::normalize(Vec2 vector)
+{
+  double L{std::sqrt(vector.x * vector.x + vector.y * vector.y)};
+  return Vec2(vector.x / L, vector.x / L);
+}

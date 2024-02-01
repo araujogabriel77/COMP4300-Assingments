@@ -154,51 +154,42 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> e)
 // spawns a bullet from a given entity to a target location
 void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
 {
-	// TODO: implement the spawning of a bullet wich travels toward target
-	//		 - bullet speed is given as scalar speed
-	//		 - you must set the velocity by using formula in notes
-  // we create every entity by calling EntityManger.addEntity(tag)
-  float deltaX, deltaY, angle;
-  deltaX = target.x - m_player->cTransform->pos.x;
-  deltaY = target.y - m_player->cTransform->pos.y;
-  angle = (atan2(deltaY, deltaX)) * 180 / PI;
-
-  float dist = sqrt((deltaX * deltaX) + (deltaY * deltaY));
-        
   auto bullet = m_entities.addEntity("bullet");
 
-	bullet->cTransform = std::make_shared<CTransform>(Vec2(entity->cTransform->pos.x, entity->cTransform->pos.y), Vec2(m_bulletConfig.S, m_bulletConfig.S), angle);
-
-	// The entity's shape will have radius 32, 8 sides, dark grey fill, and red outline of thickness 4
+  // The entity's shape will have radius 32, 8 sides, dark grey fill, and red outline of thickness 4
   bullet->cShape = std::make_shared<CShape>(
-    m_bulletConfig.SR,
-    m_bulletConfig.V,
-    sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB),
-    sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB),
-    m_playerConfig.OT
-    );
+      m_bulletConfig.SR,
+      m_bulletConfig.V,
+      sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB),
+      sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB),
+      m_playerConfig.OT);
 
-  std::cout << "Distância entre mouse e player: " << dist << "\n";
+  Vec2 difference{target.x - entity->cTransform->pos.x, target.y - entity->cTransform->pos.y};
 
+  difference.normalize();
+
+  Vec2 velocity{m_bulletConfig.S * difference.x, m_bulletConfig.S * difference.y};
+
+  bullet->cTransform = std::make_shared<CTransform>(entity->cTransform->pos, velocity, 0);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 {
-	// TODO: implement your own special weapon
+  // TODO: implement your own special weapon
 }
 
 void Game::sMovement()
 {
-	// TODO: implement all entity movement in this function
-	//			you should read the m_player->cInput component to determine if the player is moving
+  // TODO: implement all entity movement in this function
+  //			you should read the m_player->cInput component to determine if the player is moving
 
-	m_player->cTransform->velocity = { 0, 0 };
+  m_player->cTransform->velocity = {0, 0};
 
-	// implement player movement
-	if (m_player->cInput->up)
-	{
-		m_player->cTransform->velocity.y = -5;
-	}
+  // implement player movement
+  if (m_player->cInput->up)
+  {
+    m_player->cTransform->velocity.y = -5;
+  }
   if (m_player->cInput->down)
   {
     m_player->cTransform->velocity.y = 5;
@@ -211,9 +202,21 @@ void Game::sMovement()
   {
     m_player->cTransform->velocity.x = 5;
   }
-
-  m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
-  m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+  for (auto e : m_entities.getEntities())
+  {
+    if (e->tag() == "player")
+    {
+      m_player->cTransform->pos += m_player->cTransform->velocity;
+      e->cTransform->angle += 2.0f;
+      e->cShape->circle.setRotation(e->cTransform->angle);
+    }
+    else if (e->cTransform)
+    {
+      e->cTransform->pos += e->cTransform->velocity;
+      e->cTransform->angle += 2.0f;
+      e->cShape->circle.setRotation(e->cTransform->angle);
+    }
+  }
 }
 
 void Game::sLifespan()
@@ -231,19 +234,15 @@ void Game::sLifespan()
 
 void Game::sCollision()
 {
-	// TODO: implement all proper collision between entities
-	//		 be sure to use the collision radius, NOT the shape radius
+  // TODO: implement all proper collision between entities
+  //		 be sure to use the collision radius, NOT the shape radius
 
-	for (auto b : m_entities.getEntities("bullet"))
-	{
-		for (auto e : m_entities.getEntities("enemy"))
+  for (auto b : m_entities.getEntities("bullet"))
+  {
+    for (auto e : m_entities.getEntities("enemy"))
     {
-      if(
-        b->cTransform->pos.x + b->cCollision->radius == e->cTransform->pos.x - e->cCollision->radius
-        && b->cTransform->pos.y + b->cCollision->radius == e->cTransform->pos.y - e->cCollision->radius
-        || b->cTransform->pos.x - b->cCollision->radius == e->cTransform->pos.x + e->cCollision->radius
-        && b->cTransform->pos.y - b->cCollision->radius == e->cTransform->pos.y + e->cCollision->radius
-      )
+      if (
+          b->cTransform->pos.x + b->cCollision->radius == e->cTransform->pos.x - e->cCollision->radius && b->cTransform->pos.y + b->cCollision->radius == e->cTransform->pos.y - e->cCollision->radius || b->cTransform->pos.x - b->cCollision->radius == e->cTransform->pos.x + e->cCollision->radius && b->cTransform->pos.y - b->cCollision->radius == e->cTransform->pos.y + e->cCollision->radius)
       {
         std::cout << "collision!" << std::endl;
       }
@@ -253,10 +252,10 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-	// TODO: code wich implements enemy spawning should go there
-	//
-	//		(use m_currentFrame - m_lastEnemtSpawnTime) to determine
-	//		how long it has been since the last enemy spawned
+  // TODO: code wich implements enemy spawning should go there
+  //
+  //		(use m_currentFrame - m_lastEnemtSpawnTime) to determine
+  //		how long it has been since the last enemy spawned
   if (m_currentFrame - m_lastEnemySpawnTime > 90)
   {
     spawnEnemy();
@@ -265,62 +264,49 @@ void Game::sEnemySpawner()
 
 void Game::sRender()
 {
-	// TODO: change the code below to draw ALL of the entities
-	//		sample drawing of the player Entity that we have created
-	m_window.clear();
+  // TODO: change the code below to draw ALL of the entities
+  //		sample drawing of the player Entity that we have created
+  m_window.clear();
 
-	// set the position of the shape based on the entity's transform->pos
-	m_player->cShape->circle.setPosition(m_player->cTransform->pos.x, m_player->cTransform->pos.y);
+  // set the position of the shape based on the entity's transform->pos
+  m_player->cShape->circle.setPosition(m_player->cTransform->pos.x, m_player->cTransform->pos.y);
 
-	// set the rotation of the shape based on the entity's transform->angle
-	m_player->cTransform->angle += 1.0f;
-	m_player->cShape->circle.setRotation(m_player->cTransform->angle);
+  // set the rotation of the shape based on the entity's transform->angle
+  m_player->cTransform->angle += 1.0f;
+  m_player->cShape->circle.setRotation(m_player->cTransform->angle);
 
-	// draw the entity's sf::CirclShape
-	m_window.draw(m_player->cShape->circle);
+  // draw the entity's sf::CirclShape
+  m_window.draw(m_player->cShape->circle);
 
   for (auto e : m_entities.getEntities())
-	{
-    if(e->tag() != "bullet")
-    {
-      e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
+  {
+    // if (e->tag() != "player")
+    // {
+    //   // e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
+    //   // e->cTransform->angle += 1.0f;
 
-		e->cTransform->angle += 1.0f;
-		e->cShape->circle.setRotation(e->cTransform->angle);
-    } else {
+    // }
+    e->cShape->circle.setRotation(e->cTransform->angle);
+    float xPos, yPos;
+    xPos = e->cTransform->pos.x + e->cTransform->velocity.x;
+    yPos = e->cTransform->pos.y + e->cTransform->velocity.y;
+    e->cShape->circle.setPosition(xPos, yPos);
 
-      // if(
-      //   e->cTransform->pos.x - e->cCollision->radius >= m_window.getSize().x
-      //   || e->cTransform->pos.x + e->cCollision->radius < 0
-      //   || e->cTransform->pos.y - e->cCollision->radius >= m_window.getSize().y
-      //   || e->cTransform->pos.y + e->cCollision->radius < 0
-      //   ) 
-      //   {
-      //     // e->destroy();
-      //     std::cout << "destroy" << std::endl;
-      //   } else {
-          
-      //   }
+    std::cout << "angle :" << e->cTransform->angle << " velocity x: " << e->cTransform->velocity.x << " velocity y: " << e->cTransform->velocity.y << std::endl;
+    m_window.draw(e->cShape->circle);
+  }
 
-        e->cShape->circle.setPosition(
-          e->cTransform->pos.x * cos(e->cTransform->angle)
-          ,e->cTransform->pos.y * sin(e->cTransform->angle)
-        );
-    }
-		      m_window.draw(e->cShape->circle);
-	}
+  for (auto e : m_entities.getEntities())
+  {
+    e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
 
-	for (auto e : m_entities.getEntities())
-	{
-		e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
+    e->cTransform->angle += 1.0f;
+    e->cShape->circle.setRotation(e->cTransform->angle);
 
-		e->cTransform->angle += 1.0f;
-		e->cShape->circle.setRotation(e->cTransform->angle);
+    m_window.draw(e->cShape->circle);
+  }
 
-		m_window.draw(e->cShape->circle);
-	}
-
-	m_window.display();
+  m_window.display();
 }
 
 void Game::sUserInput()
