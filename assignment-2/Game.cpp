@@ -83,6 +83,7 @@ void Game::run()
 
     if (!m_paused)
     {
+      sCollision();
       sMovement();
       sEnemySpawner();
       m_currentFrame++;
@@ -128,7 +129,7 @@ void Game::spawnEnemy()
 	//		 the enemy must be spawned completely within the bounds of the window
 
   // exemplo
-  auto entity = m_entities.addEntity("Enemy");
+  auto entity = m_entities.addEntity("enemy");
 
   float ex = rand() % m_window.getSize().x;
   float ey = rand() % m_window.getSize().y;
@@ -236,13 +237,16 @@ void Game::sCollision()
 {
   // TODO: implement all proper collision between entities
   //		 be sure to use the collision radius, NOT the shape radius
-
   for (auto b : m_entities.getEntities("bullet"))
   {
     for (auto e : m_entities.getEntities("enemy"))
     {
-      if (
-          b->cTransform->pos.x + b->cCollision->radius == e->cTransform->pos.x - e->cCollision->radius && b->cTransform->pos.y + b->cCollision->radius == e->cTransform->pos.y - e->cCollision->radius || b->cTransform->pos.x - b->cCollision->radius == e->cTransform->pos.x + e->cCollision->radius && b->cTransform->pos.y - b->cCollision->radius == e->cTransform->pos.y + e->cCollision->radius)
+      bool hasCollide;
+      float distance = b->cTransform->pos.dist(e->cTransform->pos);
+      hasCollide = distance <= (b->cCollision->radius + e->cCollision->radius);
+      std::cout << "distance: " << distance << std::endl;
+      std::cout << "collide: " << hasCollide << std::endl;
+      if (hasCollide)
       {
         std::cout << "collision!" << std::endl;
       }
@@ -280,19 +284,12 @@ void Game::sRender()
 
   for (auto e : m_entities.getEntities())
   {
-    // if (e->tag() != "player")
-    // {
-    //   // e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
-    //   // e->cTransform->angle += 1.0f;
-
-    // }
     e->cShape->circle.setRotation(e->cTransform->angle);
     float xPos, yPos;
     xPos = e->cTransform->pos.x + e->cTransform->velocity.x;
     yPos = e->cTransform->pos.y + e->cTransform->velocity.y;
     e->cShape->circle.setPosition(xPos, yPos);
 
-    std::cout << "angle :" << e->cTransform->angle << " velocity x: " << e->cTransform->velocity.x << " velocity y: " << e->cTransform->velocity.y << std::endl;
     m_window.draw(e->cShape->circle);
   }
 
