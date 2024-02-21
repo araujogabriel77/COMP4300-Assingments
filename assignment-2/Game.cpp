@@ -128,13 +128,14 @@ void Game::spawnEnemy()
 	//		 the enemy must be spawned completely within the bounds of the window
 
   // exemplo
-  auto entity = m_entities.addEntity("Enemy");
+  auto entity = m_entities.addEntity("enemy");
 
   float ex = rand() % m_window.getSize().x;
   float ey = rand() % m_window.getSize().y;
 
   entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), Vec2(0.0f, 0.0f), 0.0f);
   entity->cShape = std::make_shared<CShape>(16.f, 3, sf::Color(0, 0, 255), sf::Color(255, 255, 255), 4.0f);
+  entity->cCollision = std::make_shared<CCollision>(16.f);
 
   // record when most recent enemy was spawned
   m_lastEnemySpawnTime = m_currentFrame;
@@ -171,6 +172,7 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
   Vec2 velocity{m_bulletConfig.S * difference.x, m_bulletConfig.S * difference.y};
 
   bullet->cTransform = std::make_shared<CTransform>(entity->cTransform->pos, velocity, 0);
+  bullet->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
@@ -237,14 +239,21 @@ void Game::sCollision()
   // TODO: implement all proper collision between entities
   //		 be sure to use the collision radius, NOT the shape radius
 
+
+  // std::cout << "enemies :" << m_entities.getEntities("enemy").size() << std::endl;
+  // std::cout << "bullets :" << m_entities.getEntities("bullet").size() << std::endl;
   for (auto b : m_entities.getEntities("bullet"))
   {
     for (auto e : m_entities.getEntities("enemy"))
     {
-      if (
-          b->cTransform->pos.x + b->cCollision->radius == e->cTransform->pos.x - e->cCollision->radius && b->cTransform->pos.y + b->cCollision->radius == e->cTransform->pos.y - e->cCollision->radius || b->cTransform->pos.x - b->cCollision->radius == e->cTransform->pos.x + e->cCollision->radius && b->cTransform->pos.y - b->cCollision->radius == e->cTransform->pos.y + e->cCollision->radius)
+      float dist;
+      dist = b->cTransform->pos.dist(e->cTransform->pos);
+
+      if (dist < e->cCollision->radius + b->cCollision->radius)
       {
-        std::cout << "collision!" << std::endl;
+        std::cout << "collide " << std::endl;
+        b->destroy();
+        e->destroy();
       }
     }
   }
@@ -275,24 +284,17 @@ void Game::sRender()
   m_player->cTransform->angle += 1.0f;
   m_player->cShape->circle.setRotation(m_player->cTransform->angle);
 
-  // draw the entity's sf::CirclShape
+  // draw the entity's sf::CircleShape
   m_window.draw(m_player->cShape->circle);
 
   for (auto e : m_entities.getEntities())
   {
-    // if (e->tag() != "player")
-    // {
-    //   // e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
-    //   // e->cTransform->angle += 1.0f;
-
-    // }
     e->cShape->circle.setRotation(e->cTransform->angle);
     float xPos, yPos;
     xPos = e->cTransform->pos.x + e->cTransform->velocity.x;
     yPos = e->cTransform->pos.y + e->cTransform->velocity.y;
     e->cShape->circle.setPosition(xPos, yPos);
 
-    std::cout << "angle :" << e->cTransform->angle << " velocity x: " << e->cTransform->velocity.x << " velocity y: " << e->cTransform->velocity.y << std::endl;
     m_window.draw(e->cShape->circle);
   }
 
@@ -385,7 +387,6 @@ void Game::sUserInput()
     {
       if (event.mouseButton.button == sf::Mouse::Left)
       {
-        std::cout << "Left mouse button clicked at (" << event.mouseButton.x << "," << event.mouseButton.y << ")\n";
         spawnBullet(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
       }
     }

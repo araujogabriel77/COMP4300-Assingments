@@ -13,6 +13,7 @@ void EntityManager::update()
 	for (auto e : m_entitiesToAdd)
 	{
 		m_entities.push_back(e);
+    m_entityMap[e->tag()].push_back(e);
 	}
 
 	m_entitiesToAdd.clear();
@@ -22,10 +23,10 @@ void EntityManager::update()
 
 	// remove dead entities from each vector in the entity map
 	// C++17 way of iterating through [key, value] pairs in a map
-	for (auto& [tag, entityVec] : m_entityMap)
-	{
-		removeDeadEntities(entityVec);
-	}
+	// for (auto& [tag, entityVec] : m_entityMap)
+	// {
+	// 	removeDeadEntities(entityVec);
+	// }
 }
 
 void EntityManager::removeDeadEntities(EntityVec& vec)
@@ -34,6 +35,7 @@ void EntityManager::removeDeadEntities(EntityVec& vec)
 	{
 		if (!e->isActive()) {
 			e->destroy();
+    // remove from array
 		}
 	}
 }
