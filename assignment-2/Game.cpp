@@ -83,6 +83,7 @@ void Game::run()
 
     if (!m_paused)
     {
+      sCollision();
       sMovement();
       sEnemySpawner();
       m_currentFrame++;
@@ -128,6 +129,7 @@ void Game::spawnEnemy()
 	//		 the enemy must be spawned completely within the bounds of the window
 
   // exemplo
+  auto entity = m_entities.addEntity("enemy");
   auto entity = m_entities.addEntity("enemy");
 
   float ex = rand() % m_window.getSize().x;
