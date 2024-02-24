@@ -78,7 +78,6 @@ void Game::run()
     m_entities.update();
 
     sUserInput();
-    sCollision();
     sRender();
 
     if (!m_paused)
@@ -129,7 +128,6 @@ void Game::spawnEnemy()
 	//		 the enemy must be spawned completely within the bounds of the window
 
   // exemplo
-  auto entity = m_entities.addEntity("enemy");
   auto entity = m_entities.addEntity("enemy");
 
   float ex = rand() % m_window.getSize().x;
@@ -241,9 +239,6 @@ void Game::sCollision()
   // TODO: implement all proper collision between entities
   //		 be sure to use the collision radius, NOT the shape radius
 
-
-  // std::cout << "enemies :" << m_entities.getEntities("enemy").size() << std::endl;
-  // std::cout << "bullets :" << m_entities.getEntities("bullet").size() << std::endl;
   for (auto b : m_entities.getEntities("bullet"))
   {
     for (auto e : m_entities.getEntities("enemy"))
@@ -253,7 +248,6 @@ void Game::sCollision()
 
       if (dist < e->cCollision->radius + b->cCollision->radius)
       {
-        std::cout << "collide " << std::endl;
         b->destroy();
         e->destroy();
       }
