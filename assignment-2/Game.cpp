@@ -151,8 +151,8 @@ void Game::spawnEnemy()
   Vec2 velocity{enemySpeed * difference.x, enemySpeed * difference.y};
 
   entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), velocity, 0.0f);
-  entity->cShape = std::make_shared<CShape>(16.f, vertices, sf::Color(red, green, blue), sf::Color(red, green, blue), 4.0f);
-  entity->cCollision = std::make_shared<CCollision>(16.f);
+  entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, vertices, sf::Color(red, green, blue), sf::Color(red, green, blue), 4.0f);
+  entity->cCollision = std::make_shared<CCollision>(m_enemyConfig.CR);
 
   // record when most recent enemy was spawned
   m_lastEnemySpawnTime = m_currentFrame;
@@ -162,12 +162,25 @@ void Game::spawnEnemy()
 void Game::spawnSmallEnemies(std::shared_ptr<Entity> e)
 {
 	// TODO: spawn small enemies at the location of the input enemy e
-  int points = e->cShape->circle.getPointCount();
+  int vertices = e->cShape->circle.getPointCount();
+	float speed = e->cTransform->velocity.dist(e->cTransform->pos);
+
+  for(int i = 0; i < vertices; i++)
+  {
+    float angle = 360 / vertices * i;
+    float angleInRadians = 3.14f * angle / 180;
+    Vec2 velocity = Vec2(2*(float)cos(angleInRadians), 2*(float)sin(angleInRadians));
+
+    auto entity = m_entities.addEntity("smallEnemy");
+    entity->cTransform = std::make_shared<CTransform>(e->cTransform->pos, velocity, angle);
+    entity->cShape = std::make_shared<CShape>(e->cShape->circle.getRadius() / 2, vertices, e->cShape->circle.getFillColor(), e->cShape->circle.getOutlineColor(), 4.0f);
+    entity->cCollision = std::make_shared<CCollision>(e->cCollision->radius / 2);
+    entity->cLifeSpan = std::make_shared<CLifespan>(m_enemyConfig.L);
+  }
 	// when we create the smaller enemy, we have to read the values of the original enemy
 	// - spawn a number of small enemies equal to the verticles of the original enemy
 	// - set each small enemy to the same color as the original, half the size
 	// - small enemies are worth double points of the original enemy
-  std::cout << points << " Spawning small enemies\n";
 }
 
 // spawns a bullet from a given entity to a target location
