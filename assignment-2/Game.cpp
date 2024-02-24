@@ -20,6 +20,7 @@ void Game::init(const std::string& path)
   std::string configType;
   int window_width, window_height, frameLimit, isFullScreen;
 
+  std::cout << "Loading configuration...\n";
   while (fin >> configType)
   {
     if (configType == "Window")
@@ -46,16 +47,19 @@ void Game::init(const std::string& path)
     {
       // struct PlayerConfig { int SR, CR, FR, FG, FB, OR, OG, OB, OT, V; float S; };
       fin >> m_playerConfig.SR >> m_playerConfig.CR >> m_playerConfig.S >> m_playerConfig.FR >> m_playerConfig.FG >> m_playerConfig.FB >> m_playerConfig.OR >> m_playerConfig.OG >> m_playerConfig.OB >> m_playerConfig.OT >> m_playerConfig.V;
+      std::cout << "Player configuration loaded!\n";
     }
     if (configType == "Enemy")
     {
       // struct EnemyConfig { int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SI; float SMIN, SMAX; };
       fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX >> m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SI;
+      std::cout << "Enemy configuration loaded!\n";
     }
     if (configType == "Bullet")
     {
       // struct BulletConfig { int SR, CR, FR, FG, FB, OR, OG, OB, OT, V, L; float S; };
       fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >> m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB >> m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB >> m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+      std::cout << "Bullet configuration loaded!\n";
     }
   }
 
@@ -301,7 +305,7 @@ void Game::sEnemySpawner()
   //
   //		(use m_currentFrame - m_lastEnemtSpawnTime) to determine
   //		how long it has been since the last enemy spawned
-  if (m_currentFrame - m_lastEnemySpawnTime > 90)
+  if (m_currentFrame - m_lastEnemySpawnTime > 90 && m_entities.getEntities("enemy").size() < 10)
   {
     spawnEnemy();
   }
@@ -407,19 +411,15 @@ void Game::sUserInput()
       {
       case sf::Keyboard::W:
         m_player->cInput->up = false;
-        std::cout << "W key Released\n";
         break;
       case sf::Keyboard::S:
         m_player->cInput->down = false;
-        std::cout << "S key Released\n";
         break;
       case sf::Keyboard::D:
         m_player->cInput->right = false;
-        std::cout << "D key Released\n";
         break;
       case sf::Keyboard::A:
         m_player->cInput->left = false;
-        std::cout << "A key Released\n";
         break;
       default:
         break;
