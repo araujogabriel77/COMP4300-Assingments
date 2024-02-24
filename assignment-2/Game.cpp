@@ -85,6 +85,7 @@ void Game::run()
       sCollision();
       sMovement();
       sEnemySpawner();
+      sLifespan();
       m_currentFrame++;
     }
 
@@ -246,6 +247,26 @@ void Game::sLifespan()
   //			scale its alpha channel properly
   //		if it has lifespan and its time is up
   //			destroy the entity
+  for(auto e : m_entities.getEntities())
+  {
+    if(e->cLifeSpan)
+    {
+      if(e->cLifeSpan->remaining > 0)
+      {
+        e->cLifeSpan->remaining--;
+      }
+      if(e->cLifeSpan->remaining > 0)
+      {
+        auto color = sf::Color(e->cShape->circle.getFillColor().r, e->cShape->circle.getFillColor().g, e->cShape->circle.getFillColor().b, 255 * e->cLifeSpan->remaining / m_enemyConfig.L);
+        e->cShape->circle.setFillColor(color);
+        e->cShape->circle.setOutlineColor(color);
+      }
+      if(e->cLifeSpan->remaining == 0)
+      {
+        e->destroy();
+      }
+    }
+  }
 }
 
 void Game::sCollision()
