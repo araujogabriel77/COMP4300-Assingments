@@ -252,6 +252,11 @@ void Game::sCollision()
         e->destroy();
       }
     }
+    if(b->cTransform->pos.x < 0 || b->cTransform->pos.x > m_window.getSize().x || b->cTransform->pos.y < 0 || b->cTransform->pos.y > m_window.getSize().y)
+    {
+      b->destroy();
+      std::cout << "Bullet destroyed\n";
+    }
   }
 }
 
