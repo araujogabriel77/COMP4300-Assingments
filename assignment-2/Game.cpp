@@ -90,6 +90,7 @@ void Game::run()
       sMovement();
       sEnemySpawner();
       sLifespan();
+      sScore();
       m_currentFrame++;
     }
 
@@ -101,6 +102,13 @@ void Game::run()
 void Game::setPaused()
 {
   m_paused = !m_paused;
+}
+
+void Game::sScore()
+{
+  auto scoreText = "Score: " + std::to_string(m_score);
+  m_text = sf::Text(scoreText, m_font);
+  m_text.setPosition(10, 10);
 }
 
 // respawin the player in the middle of the screen
@@ -151,7 +159,7 @@ void Game::spawnEnemy()
   Vec2 velocity{enemySpeed * difference.x, enemySpeed * difference.y};
 
   entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), velocity, 0.0f);
-  entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, vertices, sf::Color(red, green, blue), sf::Color(red, green, blue), 4.0f);
+  entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, vertices, sf::Color(red, green, blue), sf::Color(255, 255, 255), m_enemyConfig.OT);
   entity->cCollision = std::make_shared<CCollision>(m_enemyConfig.CR);
 
   // record when most recent enemy was spawned
@@ -172,9 +180,13 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> e)
     Vec2 velocity = Vec2(2*(float)cos(angleInRadians), 2*(float)sin(angleInRadians));
 
     auto entity = m_entities.addEntity("smallEnemy");
+
     entity->cTransform = std::make_shared<CTransform>(e->cTransform->pos, velocity, angle);
+
     entity->cShape = std::make_shared<CShape>(e->cShape->circle.getRadius() / 2, vertices, e->cShape->circle.getFillColor(), e->cShape->circle.getOutlineColor(), 4.0f);
+    
     entity->cCollision = std::make_shared<CCollision>(e->cCollision->radius / 2);
+
     entity->cLifeSpan = std::make_shared<CLifespan>(m_enemyConfig.L);
   }
 	// when we create the smaller enemy, we have to read the values of the original enemy
@@ -197,13 +209,12 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
       m_playerConfig.OT);
 
   Vec2 difference{target.x - entity->cTransform->pos.x, target.y - entity->cTransform->pos.y};
-
   difference.normalize();
-
   Vec2 velocity{m_bulletConfig.S * difference.x, m_bulletConfig.S * difference.y};
 
   bullet->cTransform = std::make_shared<CTransform>(entity->cTransform->pos, velocity, 0);
   bullet->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
+  bullet->cLifeSpan = std::make_shared<CLifespan>(m_bulletConfig.L);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
@@ -288,9 +299,6 @@ void Game::sLifespan()
 
 void Game::sCollision()
 {
-  // TODO: implement all proper collision between entities
-  //		 be sure to use the collision radius, NOT the shape radius
-
   for (auto b : m_entities.getEntities("bullet"))
   {
     for (auto e : m_entities.getEntities("enemy"))
@@ -302,9 +310,24 @@ void Game::sCollision()
       {
         b->destroy();
         e->destroy();
+        m_score ++;
         spawnSmallEnemies(e);
       }
     }
+
+    for (auto e : m_entities.getEntities("smallEnemy"))
+    {
+      float dist;
+      dist = b->cTransform->pos.dist(e->cTransform->pos);
+
+      if (dist < e->cCollision->radius + b->cCollision->radius)
+      {
+        b->destroy();
+        e->destroy();
+        m_score += 2;
+      }
+    }
+
     if(b->cTransform->pos.x < 0 || b->cTransform->pos.x > m_window.getSize().x || b->cTransform->pos.y < 0 || b->cTransform->pos.y > m_window.getSize().y)
     {
       b->destroy();
@@ -314,10 +337,6 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-  // TODO: code wich implements enemy spawning should go there
-  //
-  //		(use m_currentFrame - m_lastEnemtSpawnTime) to determine
-  //		how long it has been since the last enemy spawned
   if (m_currentFrame - m_lastEnemySpawnTime > 90 && m_entities.getEntities("enemy").size() < 10)
   {
     spawnEnemy();
@@ -326,8 +345,6 @@ void Game::sEnemySpawner()
 
 void Game::sRender()
 {
-  // TODO: change the code below to draw ALL of the entities
-  //		sample drawing of the player Entity that we have created
   m_window.clear();
 
   // set the position of the shape based on the entity's transform->pos
@@ -339,6 +356,7 @@ void Game::sRender()
 
   // draw the entity's sf::CircleShape
   m_window.draw(m_player->cShape->circle);
+  m_window.draw(m_text);
 
   for (auto e : m_entities.getEntities())
   {
@@ -347,7 +365,7 @@ void Game::sRender()
     xPos = e->cTransform->pos.x + e->cTransform->velocity.x;
     yPos = e->cTransform->pos.y + e->cTransform->velocity.y;
 
-    if(e->tag() == "enemy")
+    if(e->tag() == "enemy" || e->tag() == "smallEnemy")
     {
       if (xPos < 0 || xPos > m_window.getSize().x)
       {
@@ -372,7 +390,6 @@ void Game::sRender()
 
     m_window.draw(e->cShape->circle);
   }
-
   m_window.display();
 }
 
@@ -412,6 +429,8 @@ void Game::sUserInput()
       case sf::Keyboard::P:
         setPaused();
         break;
+      case sf::Keyboard::Space:
+        spawnBullet(m_player, Vec2(sf::Mouse::getPosition(m_window).x, sf::Mouse::getPosition(m_window).y));
       default:
         break;
       }
