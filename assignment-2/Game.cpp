@@ -111,7 +111,7 @@ void Game::sScore()
   m_text.setPosition(10, 10);
 }
 
-// respawin the player in the middle of the screen
+// respawn the player in the middle of the screen
 void Game::spawnPlayer()
 {
 	// TODO: Finish adding all properties of the player with the correct values from the config
@@ -219,7 +219,8 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 {
-  // TODO: implement your own special weapon
+  std::cout << "Special Weapon!\n";
+  m_specialWeaponCharge = 0;
 }
 
 void Game::sMovement()
@@ -311,6 +312,7 @@ void Game::sCollision()
         b->destroy();
         e->destroy();
         m_score ++;
+        m_specialWeaponCharge ++;
         spawnSmallEnemies(e);
       }
     }
@@ -325,6 +327,7 @@ void Game::sCollision()
         b->destroy();
         e->destroy();
         m_score += 2;
+        m_specialWeaponCharge += 2;
       }
     }
 
@@ -337,7 +340,7 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-  if (m_currentFrame - m_lastEnemySpawnTime > 90 && m_entities.getEntities("enemy").size() < 10)
+  if (m_currentFrame - m_lastEnemySpawnTime > 90 && m_entities.getEntities("enemy").size() < 1)
   {
     spawnEnemy();
   }
@@ -453,6 +456,13 @@ void Game::sUserInput()
       case sf::Keyboard::A:
         m_player->cInput->left = false;
         break;
+      case sf::Keyboard::X:
+        if(m_specialWeaponCharge >= 100) {
+          spawnSpecialWeapon(m_player);
+        }
+        break;
+      case sf::Keyboard::Space:
+        spawnBullet(m_player, Vec2(sf::Mouse::getPosition(m_window).x, sf::Mouse::getPosition(m_window).y));
       default:
         break;
       }

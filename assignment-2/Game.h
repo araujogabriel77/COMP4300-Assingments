@@ -21,6 +21,7 @@ class Game
 	int m_score = 0;
 	int m_currentFrame = 0;
 	int m_lastEnemySpawnTime = 0;
+	int m_specialWeaponCharge = 0;
 	bool m_paused = false; // whether we update game logic
 	bool m_running = true; // whether the game is running
 
