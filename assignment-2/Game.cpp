@@ -306,6 +306,18 @@ void Game::sRender()
     float xPos, yPos;
     xPos = e->cTransform->pos.x + e->cTransform->velocity.x;
     yPos = e->cTransform->pos.y + e->cTransform->velocity.y;
+
+    if(e->tag() == "enemy")
+    {
+      if (xPos < 0 || xPos > m_window.getSize().x)
+      {
+        e->cTransform->velocity.x *= -1;
+      }
+      if (yPos < 0 || yPos > m_window.getSize().y)
+      {
+        e->cTransform->velocity.y *= -1;
+      }
+    }
     e->cShape->circle.setPosition(xPos, yPos);
 
     m_window.draw(e->cShape->circle);
