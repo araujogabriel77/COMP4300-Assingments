@@ -132,9 +132,21 @@ void Game::spawnEnemy()
 
   float ex = rand() % m_window.getSize().x;
   float ey = rand() % m_window.getSize().y;
+  float targetX = rand() % m_window.getSize().x;
+  float targetY = rand() % m_window.getSize().y;
+  int red = 50 + rand() % 255;
+  int green = 50 + rand() % 255;
+  int blue = 50 + rand() % 255;
 
-  entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), Vec2(0.0f, 0.0f), 0.0f);
-  entity->cShape = std::make_shared<CShape>(16.f, 3, sf::Color(0, 0, 255), sf::Color(255, 255, 255), 4.0f);
+  int vertices = 3 + rand() % 7;
+  int enemySpeed = m_enemyConfig.VMIN + rand() % (m_enemyConfig.VMAX - m_enemyConfig.VMIN);
+  
+  Vec2 difference{targetX - ex, targetY - ey};
+  difference.normalize();
+  Vec2 velocity{enemySpeed * difference.x, enemySpeed * difference.y};
+
+  entity->cTransform = std::make_shared<CTransform>(Vec2(ex, ey), velocity, 0.0f);
+  entity->cShape = std::make_shared<CShape>(16.f, vertices, sf::Color(red, green, blue), sf::Color(red, green, blue), 4.0f);
   entity->cCollision = std::make_shared<CCollision>(16.f);
 
   // record when most recent enemy was spawned
