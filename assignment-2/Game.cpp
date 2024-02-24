@@ -5,7 +5,7 @@
 #include <random>
 #include <cmath>
 
-#define PI 3.14
+const int PLAYER_SPEED = 5;
 
 Game::Game(const std::string& config)
 {
@@ -200,21 +200,22 @@ void Game::sMovement()
   m_player->cTransform->velocity = {0, 0};
 
   // implement player movement
-  if (m_player->cInput->up)
+  float playerRadius = m_player->cShape->circle.getRadius();
+  if (m_player->cInput->up && (m_player->cTransform->pos.y - playerRadius) > PLAYER_SPEED)
   {
-    m_player->cTransform->velocity.y = -5;
+      m_player->cTransform->velocity.y = -PLAYER_SPEED;
   }
-  if (m_player->cInput->down)
+  if (m_player->cInput->down && (m_player->cTransform->pos.y + playerRadius) < m_window.getSize().y - PLAYER_SPEED)
   {
-    m_player->cTransform->velocity.y = 5;
+    m_player->cTransform->velocity.y = PLAYER_SPEED;
   }
-  if (m_player->cInput->left)
+  if (m_player->cInput->left && (m_player->cTransform->pos.x - playerRadius) > PLAYER_SPEED)
   {
-    m_player->cTransform->velocity.x = -5;
+    m_player->cTransform->velocity.x = -PLAYER_SPEED;
   }
-  if (m_player->cInput->right)
+  if (m_player->cInput->right && (m_player->cTransform->pos.x + playerRadius) < m_window.getSize().x - PLAYER_SPEED)
   {
-    m_player->cTransform->velocity.x = 5;
+    m_player->cTransform->velocity.x = PLAYER_SPEED;
   }
   for (auto e : m_entities.getEntities())
   {
@@ -359,23 +360,18 @@ void Game::sUserInput()
 			{
 			case sf::Keyboard::W:
 				m_player->cInput->up = true;
-				std::cout << "W key Pressed\n";
         break;
       case sf::Keyboard::S:
         m_player->cInput->down = true;
-        std::cout << "S key Pressed\n";
         break;
       case sf::Keyboard::D:
         m_player->cInput->right = true;
-        std::cout << "D key Pressed\n";
         break;
       case sf::Keyboard::A:
         m_player->cInput->left = true;
-        std::cout << "A key Pressed\n";
         break;
       case sf::Keyboard::P:
         setPaused();
-        std::cout << "P key Pressed\n";
         break;
       default:
         break;
