@@ -1,4 +1,4 @@
-.exe
-/assignment-2/vscode
-/assignment-2/bin
-/assignment-2/main
+*.exe
+/**/vscode
+/**/bin
+/**/main
