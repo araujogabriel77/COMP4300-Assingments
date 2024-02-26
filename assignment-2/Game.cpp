@@ -219,7 +219,9 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 {
-  std::cout << "Special Weapon!\n";
+  for(int i = 0; i <= 360; i++) {
+    spawnBullet(entity, Vec2(entity->cTransform->pos.x + 10 * cos(i), entity->cTransform->pos.y + 10 * sin(i)));
+  }
   m_specialWeaponCharge = 0;
 }
 
@@ -312,7 +314,10 @@ void Game::sCollision()
         b->destroy();
         e->destroy();
         m_score ++;
-        m_specialWeaponCharge ++;
+        if(m_specialWeaponCharge < 100)
+        {
+          m_specialWeaponCharge ++;
+        }
         spawnSmallEnemies(e);
       }
     }
@@ -340,7 +345,7 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-  if (m_currentFrame - m_lastEnemySpawnTime > 90 && m_entities.getEntities("enemy").size() < 1)
+  if (m_currentFrame - m_lastEnemySpawnTime > 90 && m_entities.getEntities("enemy").size() < 10)
   {
     spawnEnemy();
   }
